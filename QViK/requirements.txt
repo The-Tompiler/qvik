@@ -1,0 +1,3 @@
+git+https://github.com/mit-han-lab/torchquantum.git
+scikit-learn
+pandas
