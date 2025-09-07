@@ -1,5 +1,7 @@
 __pycache__/
+qcenv/
 .qcenv/
+qvikqcenv/
 .qvikqcenv/
 .vscode/
 .logs/
