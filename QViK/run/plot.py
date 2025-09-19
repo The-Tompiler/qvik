@@ -61,6 +61,11 @@ def make_fig(X_label='Epochs'):
   axes[0].set_xlabel(X_label); axes[1].set_xlabel(X_label)
   return fig, axes
 
+def make_histogram(data, bins = 100):
+  plt.hist(x=data, bins= bins)
+  plt.xlabel("Binned Matrixentry Values")
+  plt.ylabel("Number of Entries")
+  plt.show()
 
 def save_fig(fig, axes, path):
   axes[0].legend(loc="lower right")

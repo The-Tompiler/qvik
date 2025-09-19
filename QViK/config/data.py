@@ -3,7 +3,7 @@ from sklearn.datasets import make_blobs
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import train_test_split
 
-size = { 'n_samples': 200,  'test_size': 0.1 } # 1000
+size = { 'n_samples': 100,  'test_size': 0.1 } # 1000
 
 BLOBS = lambda n_classes=10: { 'dataset': 'blobs', 'data_kwargs': { **size, 'n_features': 3, 'centers': n_classes}}
 MNIST = lambda n_classes=10: { 'dataset': 'mnist', 'data_kwargs': { **size, 'n_classes': n_classes}}

@@ -3,6 +3,8 @@ import torch as th
 import numpy as np
 import torchquantum as tq
 
+from run.plot import make_histogram
+
 class BQK(tq.QuantumModule):
 
   def __init__(self, eta:int, inputs:int, mode='fidelity', intial_state:float=0.0, verbose:bool=True) -> None:
@@ -56,7 +58,9 @@ class BQK(tq.QuantumModule):
     elif self.mode == 'fidelity': 
       a, b = self.evolve(A), self.evolve(B)
       b = b.conj().permute(0, 2, 1) if len(b.shape) == 3 else b.conj().transpose(0, 1)
-      return th.abs(th.matmul(a, b)) ** 2
+      result = th.abs(th.matmul(a, b)) ** 2
+      #make_histogram(data= np.array(result).flatten())
+      return result
     elif self.mode == 'simulation': raise NotImplementedError("Noise simulation currently not supported")
     else: assert False, f'{self.mode} not supported'
 

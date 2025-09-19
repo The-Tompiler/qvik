@@ -1,1 +1,0 @@
-{"color": "#B2CC17", "kta": false, "const": true, "data": {"dataset": "mnist", "data_kwargs": {"n_samples": 200, "test_size": 0.1, "n_classes": 10}}, "steps": 100, "results": {"Test/Accuracy": [0.8, 0.95, 0.85, 0.55], "Test/L1": [1.0, 0.1, 0.5, 1.5], "Test/L2": [5.4, 0.2, 1.9, 6.0]}}

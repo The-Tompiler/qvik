@@ -1,8 +1,0 @@
-config,seeds,time
-"{'dataset': 'mnist', 'data_kwargs': {'n_samples': 200, 'test_size': 0.1, 'n_classes': 10}, 'kernel': 'QViK', 'kernel_kwargs': {'eta': 3, 'aggregation': 'lin', 'projection': 0, 'mode': 'fidelity', 'grayscale': True, 'inputs': 784}, 'train_kwargs': {'epochs': 100, 'batch_size': None}}","[0, 1, 2, 3]",-225.703125
-"{'dataset': 'mnist', 'data_kwargs': {'n_samples': 200, 'test_size': 0.1, 'n_classes': 10}, 'kernel': 'QViK', 'kernel_kwargs': {'eta': 3, 'aggregation': 'lin', 'projection': 0, 'mode': 'fidelity', 'grayscale': True, 'inputs': 784}, 'train_kwargs': {'epochs': 100, 'batch_size': None}}","[0, 1, 2, 3]",-209.234375
-"{'dataset': 'mnist', 'data_kwargs': {'n_samples': 200, 'test_size': 0.1, 'n_classes': 10}, 'kernel': 'rbf'}","[0, 1, 2, 3]",-26.171875
-"{'dataset': 'mnist', 'data_kwargs': {'n_samples': 200, 'test_size': 0.1, 'n_classes': 10}, 'kernel': 'QViK', 'kernel_kwargs': {'eta': 3, 'aggregation': 'lin', 'projection': 0, 'mode': 'fidelity', 'grayscale': True, 'inputs': 784}, 'train_kwargs': {'epochs': 100, 'batch_size': None}}","[0, 1, 2, 3]",-223.109375
-"{'dataset': 'mnist', 'data_kwargs': {'n_samples': 200, 'test_size': 0.1, 'n_classes': 10}, 'kernel': 'QViK', 'kernel_kwargs': {'eta': 4, 'aggregation': 'mean', 'projection': 0, 'mode': 'fidelity', 'grayscale': True, 'inputs': 784}, 'train_kwargs': {'epochs': 100, 'batch_size': None}}","[0, 1, 2, 3]",-63.359375
-"{'dataset': 'mnist', 'data_kwargs': {'n_samples': 200, 'test_size': 0.1, 'n_classes': 10}, 'kernel': 'rbf'}","[0, 1, 2, 3]",-32.125
-"{'dataset': 'mnist', 'data_kwargs': {'n_samples': 200, 'test_size': 0.1, 'n_classes': 10}, 'kernel': 'linear'}","[0, 1, 2, 3]",-35.640625

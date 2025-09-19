@@ -10,6 +10,8 @@ from scipy.special import factorial
 from kernels.base import BQK
 from kernels.k2a import K2A
 
+from run.plot import make_histogram
+
 
 class QViK(BQK):
   def __init__(self, eta:int, inputs:int, grayscale=False, projection:int=0, 
@@ -53,6 +55,7 @@ class QViK(BQK):
     if aggregation == 'mean': self.aggregate = lambda x: th.mean(x, dim=0)
     elif aggregation == 'sum': self.aggregate = lambda x: th.sum(x, dim=0)
     elif aggregation == 'max': self.aggregate = lambda x: th.max(x, dim=0).values
+    elif aggregation == 'min': self.aggregate = lambda x: th.min(x, dim=0).values
     elif aggregation == 'K2A': 
       self.aggregate = K2A(embed_dim=n, num_heads=int(sqrt(n)), symmetrize=False, verbose=verbose)
       self.optimizer = eval(optimizer)(self.aggregate.parameters(), lr=lr)
@@ -119,7 +122,9 @@ class QViK(BQK):
 
   def kernel(self, A:th.tensor, B:th.tensor):
     """Kernel extension to handle patches and aggregation."""
-    return self.aggregate(super().kernel(A, B))
+    result = self.aggregate(super().kernel(A, B))
+    make_histogram(data= np.array(result).flatten())
+    return result
 
 
   def build_generators(self, projection:int):

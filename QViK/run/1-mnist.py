@@ -6,7 +6,7 @@ from run.plot import *
 data = MNIST(10); seeds = list(range(4)); steps = 100
 
 for label, (alg, run, args, cfg) in {
-  'QViK (ours)': (QViK(4, 'mean', epochs=steps), train, {'log_interval': 20 }, (blue, True, False)),
+  'QViK (ours)': (QViK(2, 'mean', epochs=steps), train, {'log_interval': 20 }, (blue, True, False)),
   'RBF       ': ({'kernel': 'rbf'}, fit, {}, (yellow, False, True)),
   'Linear    ': ({'kernel': 'linear'}, fit, {}, (orange, False, True)),
 }.items(): write(label, *cfg, data, steps, execute({**data, **alg}, seeds, run, **args)[0]) 
