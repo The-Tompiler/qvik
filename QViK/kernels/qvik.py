@@ -56,6 +56,7 @@ class QViK(BQK):
     elif aggregation == 'sum': self.aggregate = lambda x: th.sum(x, dim=0)
     elif aggregation == 'max': self.aggregate = lambda x: th.max(x, dim=0).values
     elif aggregation == 'min': self.aggregate = lambda x: th.min(x, dim=0).values
+    elif aggregation == 'singlepatch': self.aggregate = lambda x: x[3]
     elif aggregation == 'K2A': 
       self.aggregate = K2A(embed_dim=n, num_heads=int(sqrt(n)), symmetrize=False, verbose=verbose)
       self.optimizer = eval(optimizer)(self.aggregate.parameters(), lr=lr)
@@ -64,6 +65,8 @@ class QViK(BQK):
       self.aggregate = lambda x: th.einsum('pij,p->ij', x, self.weights)
       self.optimizer = eval(optimizer)(self.parameters(), lr=lr)
     else: assert False, f'Aggregation {aggregation} not supported'
+
+    test_generatorset = self.build_structured_generators(4,20)
 
 
   def patch(self, data):
@@ -123,7 +126,7 @@ class QViK(BQK):
   def kernel(self, A:th.tensor, B:th.tensor):
     """Kernel extension to handle patches and aggregation."""
     result = self.aggregate(super().kernel(A, B))
-    make_histogram(data= np.array(result).flatten())
+    #make_histogram(data= np.array(result).flatten())
     return result
 
 
@@ -149,6 +152,41 @@ class QViK(BQK):
     return H
 
 
+  def build_structured_generators(self, number_of_patches, inputsize):
+    
+    entries_per_patch = inputsize//number_of_patches
+    assert inputsize/number_of_patches%1.0 ==0
+    # current problem is we created matrices which are too large
+    self.patch_eta = 0
+    while (2**self.patch_eta)**2-1 < entries_per_patch:
+      self.patch_eta += 1
+    combinations = self.patch_eta*(self.patch_eta-1)
+    self.total_eta = number_of_patches*self.patch_eta
+    first_gens = th.zeros(number_of_patches, entries_per_patch, 2 ** self.total_eta, 2 ** self.total_eta, dtype=th.complex128) 
+    list_of_onequbit_generators = [th.tensor([[1,0],[0,1]]), th.tensor([[0,1],[1,0]]),th.tensor([[0,1j],[-1j,0]]),th.tensor([[1,0],[0,-1]])]
+
+    #in case the results of this approach are bad, use only the reauli pauli matrices not the identity in the list
+    for singlepatch in range(number_of_patches):
+      patchqubits = [i for i in range(singlepatch*self.patch_eta, (singlepatch+1)*self.patch_eta)];
+      for entry in range(entries_per_patch):
+        entry_counter = entry 
+        for current_eta in range(1, self.total_eta):
+          if current_eta in patchqubits:
+            index = patchqubits.index(current_eta)
+            if 0 in patchqubits:
+              current_generator = list_of_onequbit_generators[entry_counter//(4**(len(patchqubits)-index-1))]
+            else:
+              current_generator= th.kron(current_generator, list_of_onequbit_generators[entry_counter//(4**(len(patchqubits)-index-1))])
+            entry_counter -= (entry_counter//(4**(len(patchqubits)-index-1))) * (4**(len(patchqubits)-index-1))
+          else:
+            if 0 in patchqubits:
+              current_generator = list_of_onequbit_generators[0]
+            else:
+              current_generator= th.kron(current_generator, list_of_onequbit_generators[0])
+        first_gens[singlepatch,entry] =current_generator
+
+    return first_gens
+  
   @property
   def exponent_matrix(self): 
     matrix = self.H * -1j * self.phi
