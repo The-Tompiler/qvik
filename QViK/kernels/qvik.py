@@ -1,5 +1,6 @@
 import torch as th; import numpy as np
 from torch.optim import Adam, SGD
+from itertools import permutations
 
 import torchquantum as tq
 import torchquantum.functional as tqf
@@ -66,7 +67,7 @@ class QViK(BQK):
       self.optimizer = eval(optimizer)(self.parameters(), lr=lr)
     else: assert False, f'Aggregation {aggregation} not supported'
 
-    test_generatorset = self.build_structured_generators(4,20)
+    test_generatorset = self.build_structured_generators(4,784)
 
 
   def patch(self, data):
@@ -160,9 +161,15 @@ class QViK(BQK):
     self.patch_eta = 0
     while (2**self.patch_eta)**2-1 < entries_per_patch:
       self.patch_eta += 1
-    combinations = self.patch_eta*(self.patch_eta-1)
+    initial_patch_eta = self.patch_eta
+    while np.fac(self.patch_eta)/np.fac(initial_patch_eta) < number_of_patches:
+      self.patch_eta += 1
+    list(permutations())
+
+    assert 2**(self.patch)
+
     self.total_eta = number_of_patches*self.patch_eta
-    first_gens = th.zeros(number_of_patches, entries_per_patch, 2 ** self.total_eta, 2 ** self.total_eta, dtype=th.complex128) 
+    first_gens = th.zeros(number_of_patches, entries_per_patch, 2 ** self.patch_eta, 2 ** self.patch_eta, dtype=th.complex128) 
     list_of_onequbit_generators = [th.tensor([[1,0],[0,1]]), th.tensor([[0,1],[1,0]]),th.tensor([[0,1j],[-1j,0]]),th.tensor([[1,0],[0,-1]])]
 
     #in case the results of this approach are bad, use only the reauli pauli matrices not the identity in the list
@@ -178,13 +185,13 @@ class QViK(BQK):
             else:
               current_generator= th.kron(current_generator, list_of_onequbit_generators[entry_counter//(4**(len(patchqubits)-index-1))])
             entry_counter -= (entry_counter//(4**(len(patchqubits)-index-1))) * (4**(len(patchqubits)-index-1))
-          else:
-            if 0 in patchqubits:
-              current_generator = list_of_onequbit_generators[0]
-            else:
-              current_generator= th.kron(current_generator, list_of_onequbit_generators[0])
-        first_gens[singlepatch,entry] =current_generator
-
+          #else:
+          #  if 0 in patchqubits:
+          #    current_generator = list_of_onequbit_generators[0]
+          #  else:
+          #    current_generator= th.kron(current_generator, list_of_onequbit_generators[0])
+        first_gens[singlepatch][entry] =current_generator
+    
     return first_gens
   
   @property
