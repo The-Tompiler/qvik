@@ -1,6 +1,7 @@
 import torch as th; import numpy as np
 from torch.optim import Adam, SGD
 from itertools import permutations
+import math
 
 import torchquantum as tq
 import torchquantum.functional as tqf
@@ -153,43 +154,60 @@ class QViK(BQK):
     return H
 
 
+  def faculty(self, startval):
+    result = 1;
+    while startval >0:
+      result *= startval
+      startval -= 1
+    return result
+
+
   def build_structured_generators(self, number_of_patches, inputsize):
     
-    entries_per_patch = inputsize//number_of_patches
     assert inputsize/number_of_patches%1.0 ==0
-    # current problem is we created matrices which are too large
-    self.patch_eta = 0
-    while (2**self.patch_eta)**2-1 < entries_per_patch:
-      self.patch_eta += 1
-    initial_patch_eta = self.patch_eta
-    while np.fac(self.patch_eta)/np.fac(initial_patch_eta) < number_of_patches:
-      self.patch_eta += 1
-    list(permutations())
+    entries_per_patch = inputsize//number_of_patches
+    
+    self.total_eta = 0
+    while 3**self.total_eta < entries_per_patch:
+      self.total_eta += 1
+    initial_total_eta = self.total_eta
+    while math.factorial(self.total_eta)/(math.factorial(initial_total_eta)*math.factorial(self.total_eta-initial_total_eta)) < number_of_patches:     
+      self.total_eta += 1
+    
+    patchqubit_perms = list(permutations([bit for bit in range(self.total_eta)]))
+    assert math.factorial(self.total_eta) == len(patchqubit_perms)
+    red_patchqubit_perms = [np.sort(perm[:initial_total_eta]) for perm in patchqubit_perms]
 
-    assert 2**(self.patch)
+    final_patchqubit_perms = []
+    for _i, next_perm in enumerate(red_patchqubit_perms):
+      new = True
+      for accepted_perm in final_patchqubit_perms:
+        if (next_perm == accepted_perm).all():
+          new = False
+      if new:
+        final_patchqubit_perms.append(next_perm)
+      if len(final_patchqubit_perms) == number_of_patches:
+        break
 
-    self.total_eta = number_of_patches*self.patch_eta
-    first_gens = th.zeros(number_of_patches, entries_per_patch, 2 ** self.patch_eta, 2 ** self.patch_eta, dtype=th.complex128) 
-    list_of_onequbit_generators = [th.tensor([[1,0],[0,1]]), th.tensor([[0,1],[1,0]]),th.tensor([[0,1j],[-1j,0]]),th.tensor([[1,0],[0,-1]])]
+    first_gens = th.zeros(number_of_patches, entries_per_patch, 2 ** self.total_eta, 2 ** self.total_eta, dtype=th.complex128) 
+    list_of_onequbit_generators = [th.tensor([[1,0],[0,1]]), th.tensor([[0,1],[1,0]]),th.tensor([[0,-1j],[1j,0]]),th.tensor([[1,0],[0,-1]])] #  add this in case needed th.tensor([[1,0],[0,1]]),
 
-    #in case the results of this approach are bad, use only the reauli pauli matrices not the identity in the list
     for singlepatch in range(number_of_patches):
-      patchqubits = [i for i in range(singlepatch*self.patch_eta, (singlepatch+1)*self.patch_eta)];
+      patchqubits = (final_patchqubit_perms[singlepatch]) 
       for entry in range(entries_per_patch):
         entry_counter = entry 
-        for current_eta in range(1, self.total_eta):
-          if current_eta in patchqubits:
-            index = patchqubits.index(current_eta)
-            if 0 in patchqubits:
-              current_generator = list_of_onequbit_generators[entry_counter//(4**(len(patchqubits)-index-1))]
+        for current_eta in range(0, self.total_eta):
+          if len(np.where(patchqubits==current_eta)[0]) > 0:
+            if current_eta == 0:
+              current_generator = list_of_onequbit_generators[entry_counter//(3**(len(patchqubits)-current_eta-1))+1]
             else:
-              current_generator= th.kron(current_generator, list_of_onequbit_generators[entry_counter//(4**(len(patchqubits)-index-1))])
-            entry_counter -= (entry_counter//(4**(len(patchqubits)-index-1))) * (4**(len(patchqubits)-index-1))
-          #else:
-          #  if 0 in patchqubits:
-          #    current_generator = list_of_onequbit_generators[0]
-          #  else:
-          #    current_generator= th.kron(current_generator, list_of_onequbit_generators[0])
+              current_generator= th.kron(current_generator, list_of_onequbit_generators[entry_counter//(3**(len(patchqubits)-current_eta-1))+1])
+            entry_counter -= (entry_counter//(3**(len(patchqubits)-current_eta-1))) * (3**(len(patchqubits)-current_eta-1))
+          else:
+            if current_eta == 0:
+              current_generator = list_of_onequbit_generators[0]
+            else:
+              current_generator= th.kron(current_generator, list_of_onequbit_generators[0])
         first_gens[singlepatch][entry] =current_generator
     
     return first_gens
