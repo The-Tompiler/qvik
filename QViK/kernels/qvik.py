@@ -68,8 +68,10 @@ class QViK(BQK):
       self.optimizer = eval(optimizer)(self.parameters(), lr=lr)
     else: assert False, f'Aggregation {aggregation} not supported'
 
-    test_generatorset = self.build_structured_generators(4,784)
+    structured_generators_1layer, structured_generators_2layer = self.build_structured_generators(4,784)  # self.H here
 
+    # we were using the same for generators for all patches before, now we have different ones for every patch, sof we have to change that
+    # further we have to fix the number of qubits we use because now they depend on the other settings
 
   def patch(self, data):
     # Calculate number of patches along each spatial dimension
@@ -174,7 +176,8 @@ class QViK(BQK):
     while math.factorial(self.total_eta)/(math.factorial(initial_total_eta)*math.factorial(self.total_eta-initial_total_eta)) < number_of_patches:     
       self.total_eta += 1
     
-    patchqubit_perms = list(permutations([bit for bit in range(self.total_eta)]))
+    total_eta_list = [bit for bit in range(self.total_eta)]
+    patchqubit_perms = list(permutations(total_eta_list))
     assert math.factorial(self.total_eta) == len(patchqubit_perms)
     red_patchqubit_perms = [np.sort(perm[:initial_total_eta]) for perm in patchqubit_perms]
 
@@ -199,18 +202,20 @@ class QViK(BQK):
         for current_eta in range(0, self.total_eta):
           if len(np.where(patchqubits==current_eta)[0]) > 0:
             if current_eta == 0:
-              current_generator = list_of_onequbit_generators[entry_counter//(3**(len(patchqubits)-current_eta-1))+1]
+              current_generator = list_of_onequbit_generators[entry_counter//(3**(len(total_eta_list)-current_eta-1))+1]
             else:
-              current_generator= th.kron(current_generator, list_of_onequbit_generators[entry_counter//(3**(len(patchqubits)-current_eta-1))+1])
-            entry_counter -= (entry_counter//(3**(len(patchqubits)-current_eta-1))) * (3**(len(patchqubits)-current_eta-1))
+              current_generator= th.kron(current_generator, list_of_onequbit_generators[entry_counter//(3**(len(total_eta_list)-current_eta-1))+1])
           else:
             if current_eta == 0:
               current_generator = list_of_onequbit_generators[0]
             else:
               current_generator= th.kron(current_generator, list_of_onequbit_generators[0])
+          entry_counter -= (entry_counter//(3**(len(total_eta_list)-current_eta-1))) * (3**(len(total_eta_list)-current_eta-1))
         first_gens[singlepatch][entry] =current_generator
+
+      second_gens = th.zeros(number_of_patches, entries_per_patch, 2 ** self.total_eta, 2 ** self.total_eta, dtype=th.complex128)
     
-    return first_gens
+    return first_gens, second_gens
   
   @property
   def exponent_matrix(self): 
